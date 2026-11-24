@@ -6,7 +6,7 @@
 |---|---|---|---|---|
 | M1 字幕文件采信 | 核对逐行隔离与重复字幕 | `/sheet/source` `/api/check/source` | `app/modules/source/service.py` | `tests/test_source.py` |
 | M2 帧率与丢帧约束 | 复查非法标签与精确换算 | `/sheet/clock` `/api/check/clock` | `app/modules/clock/timecode.py` | `tests/test_clock.py` |
-| M3 切版段映射 | 按切版重建目标帧 | `/` `/api/check/edits` | `app/modules/edits/contract.py` `app/modules/edits/mapping.py` | `tests/test_edits.py` |
+| M3 切版段映射 | 按切版重建目标帧与回顾副本 | `/` `/api/check/edits` | `app/modules/edits/contract.py` `app/modules/edits/mapping.py` | `tests/test_edits.py` |
 | M4 字幕冲突定位 | 定位同轨重叠帧与原行组 | `/sheet/overlaps` `/api/check/overlaps` | `app/modules/overlaps/service.py` | `tests/test_overlaps.py` |
 | M5 时长与丢段对账 | 查看并集覆盖守恒 | `/sheet/balance` `/api/check/balance` | `app/modules/balance/service.py` | `tests/test_balance.py` |
 | M6 批次留档复跑 | 保存原件并逐值复算 | `/sheet/runs` `POST /api/runs` | `app/modules/runs/files.py` `app/modules/runs/service.py` | `tests/test_runs.py` |
@@ -25,6 +25,9 @@
 | TRAP-14 | C111 内容相撞 | 后稿静默覆盖 | 同号矛盾整组隔离 | `app/modules/source/service.py` | `tests/test_source.py::test_conflicting_revision` |
 | TRAP-17 | `legacy_id` 旧表头 | 硬读当前字段失败 | 按列别名迁移 | `app/modules/source/service.py` | `tests/test_source.py::test_bom_and_alias` |
 | TRAP-23 | C115 与 C116 首尾相接 | 共同边界算重叠 | 半开区间扫线 | `app/modules/overlaps/sweep.py` | `tests/test_overlaps.py::test_touch_is_not_overlap` |
+| TRAP-24 | 回顾段复用正片源帧 | 交付覆盖重复计帧 | 同轨源覆盖并集去重 | `app/modules/balance/service.py` | `tests/test_balance.py::test_recap_source_counted_once` |
+| TRAP-25 | 回顾副本遇别条同轨字幕 | 整段回顾记为冲突 | 只记实际撞帧区间 | `app/modules/overlaps/service.py` | `tests/test_overlaps.py::test_recap_clash_at_real_frames` |
+| TRAP-26 | 回顾段源区间越出正片 | 静默复用未交付画面 | 限 `KEEP` 并集之内 | `app/modules/edits/contract.py` | `tests/test_edits.py::test_recap_outside_keep_rejected` |
 
 ## 守恒与范围
 

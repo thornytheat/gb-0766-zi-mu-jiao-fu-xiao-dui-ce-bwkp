@@ -27,6 +27,16 @@ def test_failed_cut_never_published(client):
     assert client.get('/api/runs').json['count'] == 0
 
 
+def test_failed_switch_keeps_previous_downloadable(client, saved):
+    rival = dict(example('dirty'))
+    rival['cuts'] = 'cut,start,end,target,kind\nA,0,1000,0,KEEP\nB,1000,2000,500,KEEP\n'
+    outcome = client.post('/api/runs', json=rival)
+    assert (outcome.status_code, outcome.json['code']) == (422, 'TARGET_OVERLAP')
+    assert client.get('/api/runs').json['count'] == 1
+    export = client.get(f"/api/delivery/{saved['id']}/export")
+    assert export.status_code == 200 and export.json['certificate']['id'] == saved['id']
+
+
 def test_parallel(tmp_path):
     archive = CutArchive(tmp_path)
     with ThreadPoolExecutor(max_workers=4) as pool:

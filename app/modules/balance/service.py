@@ -9,8 +9,8 @@ def balance(cues, mapped, overlaps, rejected):
     for track in sorted({row['track'] for row in cues}):
         pieces = [row for row in mapped if row['track'] == track]
         exact = dict(original=union_length([row for row in cues if row['track'] == track]))
-        for name, kind in [('delivered', 'KEEP'), ('removed', 'REMOVE'), ('pending', 'GAP')]:
-            exact[name] = union_length([row for row in pieces if row['kind'] == kind])
+        for name, kinds in [('delivered', ('KEEP', 'RECAP')), ('removed', ('REMOVE',)), ('pending', ('GAP',))]:
+            exact[name] = union_length([row for row in pieces if row['kind'] in kinds])
         for name, number in exact.items():
             total[name] += number
         rows.append(dict(track=track, **{name: show(value) for name, value in exact.items()}))

@@ -28,3 +28,13 @@ def test_fraction_union():
 def test_no_timing_evidence():
     output = balance([], [], 0, 3)
     assert output['counts']['original'] == '0' and output['counts']['rejected_unmeasurable'] == 3
+
+
+def test_recap_source_counted_once():
+    cues = ('cue_id,track,format,in,out,text\n'
+            'C1,简中,FRAME,100,200,甲\nC2,简中,FRAME,150,250,乙\nC3,简中,FRAME,300,400,丙\n')
+    plain = inspect(dict(cues=cues, cuts='cut,start,end,target,kind\nA,0,500,0,KEEP\n'))
+    recap = inspect(dict(cues=cues, cuts='cut,start,end,target,kind\nA,0,500,0,KEEP\nR,100,200,1000,RECAP\n'))
+    assert recap['edits']['counts']['RECAP'] == 2
+    assert recap['balance']['counts']['delivered'] == plain['balance']['counts']['delivered'] == '250'
+    assert recap['balance']['balanced'] and recap['balance']['counts']['original'] == '250'

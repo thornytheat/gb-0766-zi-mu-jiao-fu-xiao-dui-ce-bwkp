@@ -37,3 +37,12 @@ def test_big_id_in_collision(dirty):
 def test_reordered_cut_boundary_retains_same_cue():
     result = locate([fragment(1,10,20), fragment(1,0,10), fragment(2,12,14)])
     assert [(row['frame_in'], row['frame_out'], row['lines']) for row in result['rows']] == [(12, 14, [1,2])]
+
+
+def test_recap_clash_at_real_frames():
+    cues = ('cue_id,track,format,in,out,text\n'
+            'C1,简中,FRAME,100,200,甲\nC2,简中,FRAME,150,250,乙\nC3,简中,FRAME,300,400,丙\n')
+    cuts = 'cut,start,end,target,kind\nA,0,500,0,KEEP\nR,100,200,1000,RECAP\n'
+    rows = inspect(dict(cues=cues, cuts=cuts))['overlaps']['rows']
+    assert [(row['frame_in'], row['frame_out'], row['frames']) for row in rows] == [(121,161,40), (1041,1081,40)]
+    assert all(row['lines'] == [2,3] for row in rows)

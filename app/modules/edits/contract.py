@@ -13,10 +13,10 @@ def timeline(csv_text):
     labels = set()
     for row in rows:
         cut = row['cut']
-        if not cut or cut in labels or row['kind'] not in ('KEEP', 'REMOVE'):
+        if not cut or cut in labels or row['kind'] not in ('KEEP', 'REMOVE', 'RECAP'):
             raise Rejection('CUT_KIND', f"切版第 {row['line']} 行定义无效")
         labels.add(cut)
-        kept = row['kind'] == 'KEEP'
+        kept = row['kind'] in ('KEEP', 'RECAP')
         try:
             start, end = [frame_integer(row[k]) for k in ('start', 'end')]
             target = frame_integer(row['target']) if kept else None
@@ -26,12 +26,27 @@ def timeline(csv_text):
             raise Rejection('CUT_RANGE', f"切版第 {row['line']} 行区间无效") from exc
         edits.append(dict(row, start=start, end=end, target=target))
     edits.sort(key=lambda row: row['start'])
-    if any(left['end'] > right['start'] for left, right in zip(edits, edits[1:])):
+    main = [row for row in edits if row['kind'] != 'RECAP']
+    recaps = [row for row in edits if row['kind'] == 'RECAP']
+    if any(left['end'] > right['start'] for left, right in zip(main, main[1:])):
         raise Rejection('CUT_OVERLAP', '源切版区间互相覆盖')
+    if any(left['end'] > right['start'] for left, right in zip(recaps, recaps[1:])):
+        raise Rejection('CUT_OVERLAP', '回顾段源区间互相覆盖')
+    keeps = [row for row in main if row['kind'] == 'KEEP']
+    for recap in recaps:
+        cursor = recap['start']
+        for keep in keeps:
+            if keep['start'] > cursor:
+                break
+            cursor = max(cursor, keep['end'])
+            if cursor >= recap['end']:
+                break
+        if cursor < recap['end']:
+            raise Rejection('RECAP_SOURCE', f"回顾段 {recap['cut']} 源区间超出正片保留范围")
     target = sorted((row['target'], row['target'] + (row['end'] - row['start']) * RATIO)
-                    for row in edits if row['kind'] == 'KEEP')
+                    for row in edits if row['kind'] != 'REMOVE')
     if any(left[1] > right[0] for left, right in zip(target, target[1:])):
-        raise Rejection('TARGET_OVERLAP', '目标切版区间互相覆盖')
+        raise Rejection('TARGET_OVERLAP', '两段争抢同一目标帧')
     return edits
 
 

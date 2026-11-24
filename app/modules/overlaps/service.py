@@ -5,7 +5,7 @@ from .sweep import spans
 def locate(fragments):
     groups = defaultdict(list)
     for row in fragments:
-        if row['kind'] == 'KEEP':
+        if row['kind'] in ('KEEP', 'RECAP'):
             groups[row['track']].append((row['frame_in'], row['frame_out'], (row['line'], row['cue_id'])))
     rows = []
     for track, intervals in sorted(groups.items()):
